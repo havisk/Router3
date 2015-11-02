@@ -1,7 +1,7 @@
 import Backbone from 'backbone';
 
-let Artistmodel = Backbone.Mdel.extend({
-	urlRoot: 'https://www.parse.com/apps/artist--5/collections#class/Top_Artists',
+let Artistmodel = Backbone.Model.extend({
+	urlRoot: 'https://api.parse.com/1/classes/Top_Artists',
 	idAttribute: 'objectId'
 
 });

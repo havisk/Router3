@@ -9,15 +9,18 @@ export default React.createClass({
 
 	getThumb(image) {
 		return (
-			<Thumbnail src={image,url} id={image.objectId} onSelect={this.selectHandler}/>
+			<Thumbnail src={image.Image} id={image.objectId} onSelect={this.selectHandler}/>
 
 			);
 	},
 
 	render(){
 		return(
-			<div class='artist-list'>
-				{this.props.data.map(this.getThumbt)}
+			<div className="container">
+			<div className='artist-list'>
+				{this.props.data.map(this.getThumb)}
+			</div>
+				<button onClick={this.addClickHandler}>Add</button>
 			</div>
 			);
 	}

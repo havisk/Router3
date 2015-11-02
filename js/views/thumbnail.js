@@ -8,8 +8,21 @@ export default React.createClass({
 
 	render(){
 		return(
-			<div className="pics" onClick={this.clickHandler}>
-				<img src=(this.prop.src)/>
+			<div>
+				<div className="buttons">
+					<button onClick={this.homeClickHandler}>Home</button>
+					<button onClick={this.editClickHandler}>Edit</button>
+				</div>
+				
+				<div className="pics" onClick={this.clickHandler}>
+					<img src={this.prop.src}/>
+				</div>
+				<div className="about">
+					<ul>
+						<li><b>Artist</b>: {this.props.imageName}</li>
+						<li><b>Description</b>: {this.props.imageDescription}</li>
+					</ul>
+				</div>
 			</div>
 		);
 	}
