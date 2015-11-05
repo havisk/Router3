@@ -122,6 +122,10 @@ var _artist_collection = require('./artist_collection');
 
 var _artist_collection2 = _interopRequireDefault(_artist_collection);
 
+var _artist_model = require('./artist_model');
+
+var _artist_model2 = _interopRequireDefault(_artist_model);
+
 var _viewsThumbnail_list = require('./views/thumbnail_list');
 
 var _viewsThumbnail_list2 = _interopRequireDefault(_viewsThumbnail_list);
@@ -146,16 +150,15 @@ var Router = _backbone2['default'].Router.extend({
 		"": "home",
 		"images/:id": "showImage",
 		"add": "showAdd",
-		"edit": "showEdit"
+		"edit/:id": "showEdit"
 
 	},
 	initialize: function initialize(appElement) {
 
 		this.el = appElement;
-
 		this.artist = new _artist_collection2['default']();
-
-		var router = this;
+		this.model = new _artist_model2['default']();
+		// let router = this;
 	},
 
 	goto: function goto(route) {
@@ -184,7 +187,7 @@ var Router = _backbone2['default'].Router.extend({
 	selectImage: function selectImage(id) {
 		var _this2 = this;
 
-		var image = this.artist.toJSON().find(function (item) {
+		var artist = this.artist.toJSON().find(function (item) {
 			return item.objectId === id;
 		});
 		this.navigate('images/' + id, { trigger: true });
@@ -194,59 +197,81 @@ var Router = _backbone2['default'].Router.extend({
 				return _this2.goto("");
 			},
 			onEditClick: function () {
-				return _this2.goto("edit");
+				return _this2.goto("edit/" + id);
 			},
-			src: image.photoURL,
-			imageTitle: image.title,
-			imageDescription: image.description }));
+			// imageName={artist.Name}
+			// imageDescription={artist.Description}
+			artist: artist }));
 	},
 
 	showImage: function showImage(id) {
+		var _this3 = this;
 
-		var image = this.photos.toJSON().find(function (item) {
-			return item.objectId === id;
+		this.artist.fetch().then(function () {
+			var singleArtist = _this3.artist.get(id);
+			// if(singleArtist){
+			// 	return Pomise.resolve(singleArtist)
+			// }else{
+			// 	singleArtist= this.artist.
+			// }
+			console.log(singleArtist);
+			_reactDom2['default'].render(_react2['default'].createElement(_viewsThumbnail2['default'], {
+				onHomeClick: function () {
+					return _this3.goto("");
+				},
+				onEditClick: function () {
+					return _this3.goto("edit/" + id);
+				},
+				artist: singleArtist.toJSON() }), _this3.el);
 		});
-
-		_reactDom2['default'].render(_react2['default'].createElement(_viewsThumbnail2['default'], { src: image.image }), this.el);
 	},
 
 	showAdd: function showAdd() {
-		var _this3 = this;
-
-		this.render(_react2['default'].createElement(AddComponent, {
-			onHomeClick: function () {
-				return _this3.goto('');
-			},
-			onSubmitClick: function () {
-				return _this3.goto('');
-			} }));
-
-		(0, _jquery2['default'])('submit').click(function () {
-			var newArtist = new ArtistModel({
-				Name: (0, _jquery2['default'])('#artist').val(),
-				Description: (0, _jquery2['default'])('#description').val(),
-				Image: (0, _jquery2['default'])('#photoURL').val()
-			});
-			newArtist.save();
-		});
-	},
-
-	ShowEdit: function ShowEdit() {
 		var _this4 = this;
 
-		this.render(_react2['default'].createElement(EditComponent, {
-			onHomeClick: function () {
-				return _this4.goto("");
+		this.render(_react2['default'].createElement(_viewsAdd2['default'], {
+			onCancelClick: function () {
+				return _this4.goto('');
 			},
-			onDetailsClick: function () {
-				return _this4.goto('details');
-			},
-			onAddClick: function () {
-				return _this4.goto('add');
-			},
-			onEditClick: function () {
-				return _this4.goto('edit');
+			onUploadSelect: function (Name, Image, Description) {
+
+				var newArtist = new _artist_model2['default']({
+					Name: Name,
+					Image: Image,
+					Description: Description
+				});
+
+				newArtist.save().then(function () {
+					_this4.goto("");
+				});
 			} }));
+	},
+
+	showEdit: function showEdit(objectId) {
+		var _this5 = this;
+
+		var sing = this.artist.get(objectId);
+
+		this.render(_react2['default'].createElement(_viewsEdit2['default'], {
+			data: sing.toJSON(),
+			onCancelClick: function () {
+				return _this5.goto("");
+			},
+			onSubmit: function (Name, Image, Description) {
+				return _this5.saveForm(Name, Image, Description, objectId);
+			} }));
+	},
+
+	saveForm: function saveForm(Name, Image, Description, objectId) {
+		var _this6 = this;
+
+		this.artist.get(objectId).save({
+			Name: Name,
+			Image: Image,
+			Description: Description
+		}).then(function () {
+			_this6.goto("");
+		});
 	},
 
 	start: function start() {
@@ -257,7 +282,7 @@ var Router = _backbone2['default'].Router.extend({
 exports['default'] = Router;
 module.exports = exports['default'];
 
-},{"./artist_collection":2,"./views/add":6,"./views/edit":7,"./views/thumbnail":8,"./views/thumbnail_list":9,"backbone":10,"jquery":12,"react":169,"react-dom":13}],6:[function(require,module,exports){
+},{"./artist_collection":2,"./artist_model":3,"./views/add":6,"./views/edit":7,"./views/thumbnail":8,"./views/thumbnail_list":9,"backbone":10,"jquery":12,"react":169,"react-dom":13}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -273,12 +298,34 @@ var _react2 = _interopRequireDefault(_react);
 exports["default"] = _react2["default"].createClass({
 	displayName: "add",
 
-	cancelClickHandler: function cancelClickHandler() {
-		this.props.onHomeClick();
+	cancelHandler: function cancelHandler() {
+		this.props.onCancelClick();
 	},
 
-	submitClickHandler: function submitClickHandler() {
-		this.prop.onSubmitClick();
+	submitHandler: function submitHandler() {
+		event.preventDefault();
+		this.props.onUploadSelect(this.state.Image, this.state.Description);
+	},
+
+	updateImage: function updateImage(event) {
+		var newImage = { file: file, imageUrl: event.target.result };
+		this.setState({
+			Image: newImage
+		});
+	},
+
+	updateDescription: function updateDescription(event) {
+		var newDescription = event.currentTarget.value;
+		this.setState({
+			Description: newDescription
+		});
+	},
+
+	updateName: function updateName(event) {
+		var newName = event.currentTarget.value;
+		this.setState({
+			Name: newName
+		});
 	},
 
 	render: function render() {
@@ -287,7 +334,7 @@ exports["default"] = _react2["default"].createClass({
 			null,
 			_react2["default"].createElement(
 				"div",
-				{ "class": "container" },
+				{ className: "container" },
 				_react2["default"].createElement(
 					"form",
 					null,
@@ -297,27 +344,27 @@ exports["default"] = _react2["default"].createClass({
 						_react2["default"].createElement(
 							"li",
 							null,
-							_react2["default"].createElement("input", { type: "text", placeholder: "artist", id: "artist" })
+							_react2["default"].createElement("input", { className: "addup dup", onChange: this.updateImage, type: "file", multiple: true, ref: "fileInput", placeholder: "photo url", id: "photoURL" })
 						),
 						_react2["default"].createElement(
 							"li",
 							null,
-							_react2["default"].createElement("input", { type: "text", placeholder: "photo url", id: "photoURL" })
+							_react2["default"].createElement("input", { className: "addup", onChange: this.updateName, type: "text", placeholder: "Artist", id: "artist" })
 						),
 						_react2["default"].createElement(
 							"li",
 							null,
-							_react2["default"].createElement("textarea", { placeholder: "description", id: "description" })
+							_react2["default"].createElement("textarea", { className: "addup", rows: "4", cols: "50", onChange: this.updateDescription, placeholder: "Description", id: "description" })
 						)
 					),
 					_react2["default"].createElement(
 						"button",
-						{ onClick: this.submitClickHandler, type: "submit", id: "submit" },
+						{ className: "hip", onClick: this.submitHandler, type: "submit", id: "submit" },
 						"Submit"
 					),
 					_react2["default"].createElement(
 						"button",
-						{ onClick: this.homeClickHandler, type: "submit", id: "submit" },
+						{ className: "hip", onClick: this.cancelHandler, type: "submit", id: "submit" },
 						"Cancel"
 					)
 				)
@@ -344,39 +391,103 @@ var _react2 = _interopRequireDefault(_react);
 exports["default"] = _react2["default"].createClass({
 	displayName: "edit",
 
+	getInitialState: function getInitialState() {
+		return {
+			Name: this.props.Name,
+			Image: this.props.Image,
+			Description: this.props.Description
+		};
+	},
+
+	submitHandler: function submitHandler(adder) {
+		adder.preventDefault();
+		this.props.onSubmit(this.state.Name, this.state.Image, this.state.description);
+	},
+
+	cancelHandler: function cancelHandler() {
+		this.props.onCancelClick();
+	},
+
+	updateImage: function updateImage(adder) {
+		var newImage = adder.currentTarget.value;
+
+		this.setState({
+			Image: newImage
+		});
+	},
+
+	updateName: function updateName(adder) {
+		var newName = adder.currentTarget.value;
+
+		this.setState({
+			Name: newName
+		});
+	},
+
+	updateDescription: function updateDescription(adder) {
+		var newImage = adder.currentTarget.value;
+
+		this.setState({
+			Description: newDescription
+		});
+	},
+
 	render: function render() {
+		console.log(this);
 
 		return _react2["default"].createElement(
 			"div",
 			null,
 			_react2["default"].createElement(
 				"div",
-				{ "class": "container" },
+				{ className: "editC" },
 				_react2["default"].createElement(
 					"form",
-					null,
+					{ onSubmit: this.submitHandler },
 					_react2["default"].createElement(
 						"ul",
-						null,
+						{ className: "showem" },
 						_react2["default"].createElement(
 							"li",
 							null,
-							_react2["default"].createElement("input", { type: "text", placeholder: "artist", id: "artist" })
+							_react2["default"].createElement(
+								"label",
+								{ className: "file" },
+								_react2["default"].createElement("input", { onChange: this.updateImage, type: "file", multiple: true, ref: "fileInput", placeholder: "photo url", id: "photoURL" })
+							)
 						),
 						_react2["default"].createElement(
 							"li",
 							null,
-							_react2["default"].createElement("textarea", { placeholder: "description", id: "description" })
+							_react2["default"].createElement(
+								"label",
+								{ className: "namel" },
+								_react2["default"].createElement("input", { onChange: this.updateName, type: "text", value: this.state.Name, placeholder: "Artist", id: "artist" })
+							)
+						),
+						_react2["default"].createElement(
+							"li",
+							null,
+							_react2["default"].createElement(
+								"label",
+								{ className: "descript" },
+								" ",
+								_react2["default"].createElement("textarea", { onChange: this.updateDescription, rows: "4", cols: "50", value: this.state.Description, placeholder: "Description", id: "description" })
+							)
 						)
-					),
+					)
+				),
+				_react2["default"].createElement(
+					"div",
+					null,
 					_react2["default"].createElement(
 						"button",
-						{ onClick: this.submitClickHandler, type: "submit", id: "submit" },
+						{ className: "run", onClick: this.submitHandler, type: "submit", id: "submit" },
 						"Submit"
 					),
 					_react2["default"].createElement(
 						"button",
-						{ onClick: this.descriptionClickHandler },
+						{ className: "run", onClick: this.cancelHandler },
 						"Cancel"
 					)
 				)
@@ -403,39 +514,38 @@ var _react2 = _interopRequireDefault(_react);
 exports["default"] = _react2["default"].createClass({
 	displayName: "thumbnail",
 
+	homeHandler: function homeHandler() {
+		this.props.onHomeClick();
+	},
+
+	// addHandler() {
+	// 	this.props.onAddClick("add");
+	// },
+
+	editHandler: function editHandler(id) {
+		this.props.onEditClick(id);
+	},
+
 	clickHandler: function clickHandler(event) {
-		this.props.onSelect(this.props.id);
+		this.props.onSelectClick(this.props.id);
 	},
 
 	render: function render() {
+		console.log(this);
 		return _react2["default"].createElement(
 			"div",
 			null,
 			_react2["default"].createElement(
 				"div",
-				{ className: "buttons" },
-				_react2["default"].createElement(
-					"button",
-					{ onClick: this.homeClickHandler },
-					"Home"
-				),
-				_react2["default"].createElement(
-					"button",
-					{ onClick: this.editClickHandler },
-					"Edit"
-				)
-			),
-			_react2["default"].createElement(
-				"div",
 				{ className: "pics", onClick: this.clickHandler },
-				_react2["default"].createElement("img", { src: this.prop.src })
+				_react2["default"].createElement("img", { className: "sumo", src: this.props.artist.Image.url })
 			),
 			_react2["default"].createElement(
 				"div",
 				{ className: "about" },
 				_react2["default"].createElement(
 					"ul",
-					null,
+					{ className: "doit" },
 					_react2["default"].createElement(
 						"li",
 						null,
@@ -445,8 +555,9 @@ exports["default"] = _react2["default"].createClass({
 							"Artist"
 						),
 						": ",
-						this.props.imageName
+						this.props.artist.Name
 					),
+					_react2["default"].createElement("br", null),
 					_react2["default"].createElement(
 						"li",
 						null,
@@ -456,7 +567,21 @@ exports["default"] = _react2["default"].createClass({
 							"Description"
 						),
 						": ",
-						this.props.imageDescription
+						this.props.artist.Description
+					)
+				),
+				_react2["default"].createElement(
+					"div",
+					{ className: "buttons" },
+					_react2["default"].createElement(
+						"button",
+						{ className: "chip", onClick: this.homeHandler },
+						"Home"
+					),
+					_react2["default"].createElement(
+						"button",
+						{ className: "chip", onClick: this.editHandler },
+						"Edit"
 					)
 				)
 			)
@@ -479,19 +604,39 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _thumbnail = require('./thumbnail');
+var _reactDom = require('react-dom');
 
-var _thumbnail2 = _interopRequireDefault(_thumbnail);
+var _reactDom2 = _interopRequireDefault(_reactDom);
 
 exports['default'] = _react2['default'].createClass({
 	displayName: 'thumbnail_list',
+
+	addHandler: function addHandler() {
+		this.props.onAddClick("add");
+	},
 
 	selectHandler: function selectHandler(id) {
 		this.props.onThumbnailSelect(id);
 	},
 
-	getThumb: function getThumb(image) {
-		return _react2['default'].createElement(_thumbnail2['default'], { src: image.Image, id: image.objectId, onSelect: this.selectHandler });
+	getThumb: function getThumb(artist) {
+		var _this = this;
+
+		return _react2['default'].createElement(
+			'div',
+			{ key: artist.objectId, className: 'pic', onClick: function () {
+					return _this.selectHandler(artist.objectId);
+				} },
+			_react2['default'].createElement(
+				'ul',
+				{ className: 'move' },
+				_react2['default'].createElement(
+					'li',
+					{ className: 'peeps' },
+					_react2['default'].createElement('img', { src: artist.Image.url, className: 'ret' })
+				)
+			)
+		);
 	},
 
 	render: function render() {
@@ -499,13 +644,18 @@ exports['default'] = _react2['default'].createClass({
 			'div',
 			{ className: 'container' },
 			_react2['default'].createElement(
+				'h1',
+				null,
+				'Artists: The Good & The Why Are You Making Music!!'
+			),
+			_react2['default'].createElement(
 				'div',
 				{ className: 'artist-list' },
 				this.props.data.map(this.getThumb)
 			),
 			_react2['default'].createElement(
 				'button',
-				{ onClick: this.addClickHandler },
+				{ className: 'butt', onClick: this.addHandler },
 				'Add'
 			)
 		);
@@ -513,7 +663,7 @@ exports['default'] = _react2['default'].createClass({
 });
 module.exports = exports['default'];
 
-},{"./thumbnail":8,"react":169}],10:[function(require,module,exports){
+},{"react":169,"react-dom":13}],10:[function(require,module,exports){
 (function (global){
 //     Backbone.js 1.2.3
 

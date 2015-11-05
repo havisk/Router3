@@ -4,7 +4,7 @@ import React from 'react';
 import ReactDom from 'react-dom';
 
 import ArtistCollection from './artist_collection';
-
+import ArtistModel from './artist_model';
 import ThumbnailList from './views/thumbnail_list';
 import PreviewArtist from './views/thumbnail';
 import Add from './views/add';
@@ -22,16 +22,15 @@ let Router = Backbone.Router.extend({
 		""  : "home",
 		"images/:id"  : "showImage",
 		"add"  :  "showAdd",
-		"edit" :  "showEdit"
+		"edit/:id" :  "showEdit"
 
 },
 	initialize: function(appElement) {
 
 		this.el = appElement;
-
 		this.artist = new ArtistCollection();
-
-		let router = this;
+		this.model = new ArtistModel();
+		// let router = this;
 	},
 
 		goto(route) {
@@ -45,7 +44,6 @@ let Router = Backbone.Router.extend({
 		},
 
 		home() {
-
 			this.artist.fetch().then(() =>{
 				this.render(
 					<ThumbnailList
@@ -58,55 +56,82 @@ let Router = Backbone.Router.extend({
 		},
 
 			selectImage(id) {
-				let image = this.artist.toJSON().find(item => item.objectId === id);
+				let artist= this.artist.toJSON().find(item => item.objectId === id);
 				this.navigate('images/' + id, {trigger: true});
 
 				this.render(
 					<PreviewArtist
 					onHomeClick={() => this.goto("")}
-					onEditClick={() => this.goto("edit")}
-					src={image.photoURL}
-					imageTitle={image.title}
-					imageDescription={image.description}/>
+					onEditClick={() => this.goto("edit/" + id)}
+					// imageName={artist.Name}
+					// imageDescription={artist.Description}
+					artist={artist}/>
 
 					)
 			},
 
 			showImage(id) {
 
-				let image = this.photos.toJSON().find(item => item.objectId === id);
+				this.artist.fetch().then( () =>  {
+					let singleArtist = this.artist.get(id);
+					// if(singleArtist){
+					// 	return Pomise.resolve(singleArtist)
+					// }else{
+					// 	singleArtist= this.artist.
+					// }
+					console.log(singleArtist);
+					ReactDom.render(<PreviewArtist 
+						onHomeClick={() => this.goto("")}
+						onEditClick={() => this.goto("edit/" + id)} 
+						artist={singleArtist.toJSON()}/>, this.el);
+				});
 
-				ReactDom.render(<PreviewArtist src ={image.image}/>, this.el);
+
 
 			},
 
 			showAdd() {
 				this.render(
-					<AddComponent
-					onHomeClick={() => this.goto('')}
-					onSubmitClick={() => this.goto('')}/>
+					<Add
+					onCancelClick={() => this.goto('')}
+					onUploadSelect={(Name, Image, Description) => {
 
-					);
+						let newArtist = new ArtistModel ({
+							Name: Name,
+							Image: Image,
+							Description: Description
+						});
 
-			$('submit').click(function() {
-				var newArtist = new ArtistModel ({
-					Name: $('#artist').val(),
-					Description: $('#description').val(),
-					Image: $('#photoURL').val(),
-				});
-				newArtist.save();
-			});
+						newArtist.save().then(() => {
+							this.goto("");
+						});
+					}
+				}/>	
+			);
 		},
 
-ShowEdit() {
-	this.render(
-		<EditComponent
-		onHomeClick={() => this.goto("")}
-		onDetailsClick={() => this.goto('details')}
-    onAddClick={() => this.goto('add')}
-    onEditClick={() => this.goto('edit')}/>
+showEdit(objectId) {
+	let sing = this.artist.get(objectId);
+
+		this.render(
+			<Edit
+			data={sing.toJSON()}
+			onCancelClick={() => this.goto("")}
+	    onSubmit={(Name, Image,  Description) => 
+	    	this.saveForm(Name, Image, Description, objectId)}/>
 
 		);
+
+},
+
+saveForm(Name, Image, Description, objectId){
+	this.artist.get(objectId).save({
+		Name: Name,
+		Image: Image,
+		Description: Description
+	}).then(() => {
+		this.goto("");
+	});
 },
 
 

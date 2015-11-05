@@ -2025,6 +2025,99 @@ html {
   content: ""; }
 
 body {
-  background: #e2ebf3; }
+  background: black;
+  background-image: url(../images/speaker.gif); }
+
+h1 {
+  text-align: center;
+  color: red;
+  padding-bottom: 68px; }
+
+li img {
+  width: 200px;
+  height: 150px; }
+
+.peeps {
+  float: left;
+  display: block;
+  margin-right: 2.35765%;
+  width: 31.76157%;
+  padding-top: 20px; }
+  .peeps:last-child {
+    margin-right: 0; }
+
+.pics, .about {
+  position: relative;
+  left: 30%; }
+
+.sumo {
+  width: 600px;
+  height: 400px; }
+
+.move {
+  position: relative;
+  left: 107px; }
+
+.butt {
+  position: relative;
+  left: -50%;
+  top: 550px;
+  height: 70px; }
+
+.butt {
+  border-radius: 20px;
+  background: red; }
+
+.doit {
+  width: 465px;
+  color: red;
+  background-color: black; }
+
+.addup {
+  position: relative;
+  left: 34%;
+  width: 400px;
+  top: 150px; }
+
+.buttons {
+  position: relative;
+  left: 340px; }
+
+.chip {
+  position: relative;
+  top: 70px;
+  left: -178px;
+  margin-right: 20px;
+  background: red;
+  border-radius: 20px; }
+
+.showem {
+  position: relative;
+  top: 152px;
+  left: 420px; }
+  .showem li {
+    list-style: none; }
+
+.file, .dup {
+  color: red; }
+
+.run {
+  border-radius: 20px;
+  background: red;
+  position: relative;
+  top: 182px;
+  left: 460px;
+  margin-right: 19px; }
+
+.hip {
+  border-radius: 20px;
+  background: red;
+  position: relative;
+  top: 182px;
+  left: 496px;
+  margin-right: 19px; }
+
+form ul li {
+  margin-top: 5px; }
 
 /*# sourceMappingURL=main.css.map */
